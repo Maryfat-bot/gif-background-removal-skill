@@ -1,62 +1,61 @@
 ---
 name: gif-background-removal
-description: Remove background from animated GIF files and generate transparent GIFs. Use when the user asks to remove background from a GIF, make a GIF transparent, or process animated image transparency.
+description: Advanced background removal from animated GIF files using AI matting and high-precision frame processing to generate clean transparent GIFs without residue. Use when the user asks to cleanly remove background from a GIF or make a GIF transparent with high quality.
 ---
 
-# GIF Background Removal
+# Advanced GIF Background Removal
 
-A skill for removing the background from animated GIF images and outputting a transparent GIF.
+A professional skill for removing complex or textured backgrounds from animated GIF images using AI-powered matting (such as `rembg`) to output clean, crisp transparent GIFs without halos or residue.
 
 ## When to Use
-* The user wants to remove the background of an animated GIF.
-* The user wants to make a GIF transparent.
-* The user provides an animated GIF and asks for background removal or chroma keying.
+* The user wants to cleanly remove complex, textured, or gradient backgrounds from an animated GIF.
+* Simple color tolerance leaves residue or halos and higher-precision AI matting is needed.
+* The user asks for high-quality transparent GIFs.
 
 ## Workflow
 
 1. **Analyze the Request:**
-   - Identify the source GIF provided by the user.
-   - Determine if a specific background color needs to be keyed out (e.g., solid white, solid black, or chroma green/blue) or if automated background removal is required.
+   - Identify the input animated GIF.
+   - Determine that AI-powered foreground segmentation (`rembg` or advanced alpha matting) is required to handle complex textures and lighting.
 
-2. **Generate Processing Code:**
-   Write and execute a Python script using standard libraries (`Pillow`, `imageio`, or `rembg` if available) to:
+2. **Generate and Execute Processing Code:**
+   Write and execute a Python script utilizing `Pillow` and `rembg` (or advanced edge refinement) to:
    - Extract all frames from the input GIF.
-   - Process each frame to remove the background (either via color thresholding, alpha channel masking, or AI matting).
-   - Re-assemble and save the frames back into an optimized animated GIF with transparency (`dispose=2` or proper alpha handling to prevent frame ghosting/artifacts).
+   - Process each frame individually through the AI background removal model to extract precise alpha masks.
+   - Clean up semi-transparent edge artifacts to prevent "ghosting" or residual halos.
+   - Re-assemble and save the processed frames back into an optimized animated GIF with clean transparency (`dispose=2` or proper alpha handling).
 
 3. **Deliver the Output:**
-   - Provide the processed GIF file for the user to download.
-   - Briefly explain the method used (e.g., color-based removal or frame-by-frame alpha masking).
+   - Provide the high-quality transparent GIF file for the user to download.
 
-## Python Implementation Example
+## Python Implementation Example (AI-powered with `rembg`)
 
 ```python
 from PIL import Image
+import io
+from rembg import remove
 
-def remove_gif_background(input_path, output_path, bg_color=(255, 255, 255), tolerance=30):
+def remove_gif_background_ai(input_path, output_path):
     img = Image.open(input_path)
     frames = []
+    durations = []
     
     try:
         while True:
-            # Convert frame to RGBA
+            durations.append(img.info.get('duration', 100))
+            # Convert current frame to RGBA
             frame = img.copy().convert("RGBA")
-            datas = frame.getdata()
             
-            new_data = []
-            for item in datas:
-                # Check if the pixel is close to the target background color
-                if (abs(item[0] - bg_color[0]) < tolerance and
-                    abs(item[1] - bg_color[1]) < tolerance and
-                    abs(item[2] - bg_color[2]) < tolerance):
-                    # Make transparent
-                    new_data.append((255, 255, 255, 0))
-                else:
-                    new_data.append(item)
+            # Convert frame to bytes for rembg processing
+            img_byte_arr = io.BytesIO()
+            frame.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
             
-            frame.putdata(new_data)
-            frames.append(frame)
+            # Apply AI background removal
+            output_data = remove(img_byte_arr)
+            processed_frame = Image.open(io.BytesIO(output_data)).convert("RGBA")
             
+            frames.append(processed_frame)
             img.seek(img.tell() + 1)
     except EOFError:
         pass
@@ -67,7 +66,7 @@ def remove_gif_background(input_path, output_path, bg_color=(255, 255, 255), tol
             save_all=True,
             append_images=frames[1:],
             optimize=False,
-            duration=img.info.get('duration', 100),
+            duration=durations,
             loop=0,
-            transparency=0
+            disposal=2
         )
