@@ -28,8 +28,8 @@ The license covers only the skill and helper script. It does not claim rights in
 
 ## 中文说明
 
-这是一个 Codex GIF 去背 skill 和配套脚本。安装依赖后，运行脚本即可逐帧去背，并保留动画时长与循环设置。首次运行会下载模型权重；仓库不包含模型文件。
+这是一个 GIF 去背 skill 和配套脚本。安装依赖后，运行脚本即可逐帧去背，并保留动画时长与循环设置。首次运行会下载模型权重；仓库不包含模型文件。
 
-当前许可证允许下载未修改版本，并用于个人或商业项目；不允许修改、再发布或转售 skill 本身。仓库设为公开后，GitHub 仍允许用户查看和 fork。详见根目录 `LICENSE`。
+当前许可证允许下载未修改版本，并用于个人或商业项目；不允许修改、再发布或转售 skill 本身。详见根目录 `LICENSE`。
 
 版权署名沿用 `Maryfat-bot`。如果这不是你希望公开使用的账号名称，请在上传前调整 `LICENSE` 和本文件。
